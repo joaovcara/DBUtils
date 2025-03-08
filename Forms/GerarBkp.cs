@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
-using System.Windows.Forms;
+using DBUtils.Forms;
 using DBUtils.Utils;
 using Microsoft.Data.SqlClient;
 
@@ -11,12 +7,25 @@ namespace DBUtils
     public partial class GerarBkp : Form
     {
         private SqlConnection _Conn;
+        public SqlConnection Connection => _Conn;
         private string database;
         private SaveFileDialog _SaveFileDialog;
 
         public GerarBkp()
         {
-            _Conn = ConnectionManager.GetConnection();
+            if (_Conn == null || _Conn.State != System.Data.ConnectionState.Open)
+            {
+                var conexaoForm = new Conexao();
+                if (conexaoForm.ShowDialog() == DialogResult.OK)
+                {
+                    _Conn = ConnectionManager.GetConnection();
+                }
+                else
+                {
+                    this.Hide();
+                    return;
+                }
+            }
             InitializeComponent();
             GetDatabases();
         }

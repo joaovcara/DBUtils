@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
-using System.Windows.Forms;
-using System.Drawing;
 using DBUtils.Utils;
 using DBUtils.Models;
+using DBUtils.Forms;
 
 namespace DBUtils
 {
@@ -16,11 +11,25 @@ namespace DBUtils
         private SqlConnection _Conn;
         private OpenFileDialog _OpenFileDialog = new OpenFileDialog();
 
+        public SqlConnection Connection => _Conn;
+
         LogSistema logSistema = new LogSistema();
 
         public GerarBanco()
         {
-            _Conn = ConnectionManager.GetConnection();
+            if (_Conn == null || _Conn.State != System.Data.ConnectionState.Open)
+            {
+                var conexaoForm = new Conexao();
+                if (conexaoForm.ShowDialog() == DialogResult.OK)
+                {
+                    _Conn = ConnectionManager.GetConnection();
+                }
+                else
+                {
+                    this.Hide();
+                    return;
+                }
+            }
             InitializeComponent();
         }
 
