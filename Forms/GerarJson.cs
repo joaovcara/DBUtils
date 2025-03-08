@@ -1,25 +1,32 @@
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
-using System.Windows.Forms;
-using System.Drawing;
 using DBUtils.Utils;
 using DBUtils.Models;
-using Microsoft.VisualBasic.Devices;
+using DBUtils.Forms;
 
 namespace DBUtils
 {
     public partial class GerarJson : Form
     {
         private SqlConnection _Conn;
+        public SqlConnection Connection => _Conn;
         private SaveFileDialog _SaveFileDialog = new SaveFileDialog();
 
         public GerarJson()
         {
-            _Conn = ConnectionManager.GetConnection(); ;
+            if (_Conn == null || _Conn.State != System.Data.ConnectionState.Open)
+            {
+                var conexaoForm = new Conexao();
+                if (conexaoForm.ShowDialog() == DialogResult.OK)
+                {
+                    _Conn = ConnectionManager.GetConnection();
+                }
+                else
+                {
+                    this.Hide();
+                    return;
+                }
+            }
             InitializeComponent();
             GetDatabases();
         }
