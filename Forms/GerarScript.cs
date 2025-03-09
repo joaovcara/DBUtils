@@ -88,6 +88,8 @@ namespace DBUtils.Forms
 
             StringBuilder scriptBuilder = new StringBuilder();
             scriptBuilder.AppendLine(GeraComentarioScript());
+            scriptBuilder.AppendLine(ValidaVersao(txtVersao.Text));
+            scriptBuilder.AppendLine("BEGIN");
 
             // Ordena os itens da ListView
             var sortedItems = lstScripts.Items.Cast<ListViewItem>()
@@ -165,6 +167,21 @@ namespace DBUtils.Forms
                 }
             }
 
+            scriptBuilder.AppendLine();
+            scriptBuilder.AppendLine("-----------------------------------------------------------------------");
+            scriptBuilder.AppendLine("-- Registra a versão executada.");
+            scriptBuilder.AppendLine("INSERT INTO SchemaVersion (Version, DataExecucao) VALUES ('" + txtVersao.Text + "', GETDATE());");
+            scriptBuilder.AppendLine("-----------------------------------------------------------------------");
+            scriptBuilder.AppendLine();
+            scriptBuilder.AppendLine("END");
+            scriptBuilder.AppendLine("ELSE");
+            scriptBuilder.AppendLine("BEGIN");
+            scriptBuilder.AppendLine("RAISERROR('A versão " + txtVersao.Text + " já foi executada.',");
+            scriptBuilder.AppendLine("           16, -- Severity.");
+            scriptBuilder.AppendLine("           1 -- State.");
+            scriptBuilder.AppendLine(");");
+            scriptBuilder.AppendLine("END");
+
             string destinoPath = txtDestino.Text;
             if (string.IsNullOrEmpty(destinoPath))
             {
@@ -198,6 +215,21 @@ namespace DBUtils.Forms
             return comentario;
         }
 
+        private string ValidaVersao(string versao)
+        {
+            string validaVersao = string.Empty;
+            // Adiciona a verificação de versão no início do script
+            validaVersao += "-----------------------------------------------------------------------";
+            validaVersao += Environment.NewLine;
+            validaVersao += "-- Verificando se a versão " + versao + " já foi executada.";
+            validaVersao += Environment.NewLine;
+            validaVersao += "IF NOT EXISTS (SELECT 1 FROM SchemaVersion WHERE Version = '" + versao + "')";
+            validaVersao += Environment.NewLine;
+            validaVersao += "-----------------------------------------------------------------------";
+
+            return validaVersao;
+        }
+
         private int GetOrder(string tipo)
         {
             switch (tipo)
@@ -211,7 +243,6 @@ namespace DBUtils.Forms
                 default:
                     return 4; // Para tipos não reconhecidos
             }
-
         }
     }
 }
